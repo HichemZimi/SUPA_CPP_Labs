@@ -1,36 +1,78 @@
 #include <iostream>
 #include <string>
 #include "RPData.h"
+#include "REdata.h"
 #include "magCal.h"
 #include "chisquare.h"
 #include "XYcalculation.h"
 
 int main() {
-    // Path to the file
-    std::string filePath = "/workspaces/SUPA_CPP_Labs/Exercises2024/Ex1_2/input2D_float.txt";
-    
-    // Ask the user to input the number of lines to print
-    int N;
-    std::cout << "Enter the number of lines to print: ";
-    std::cin >> N;
+    // File paths
+    std::string inputFilePath = "/workspaces/SUPA_CPP_Labs/Exercises2024/Ex1_2/input2D_float.txt";
+    std::string errorFilePath = "/workspaces/SUPA_CPP_Labs/Exercises2024/Ex1_2/error2D_float.txt";
 
-    // Calling readAndPrintData function to print first N lines
-    RPData (filePath, N);
+    bool continueProgram = true;
 
-    // Calling CalculateMagnitude function to calculate magnitudes for each row in the file
-    magCal(filePath);
-    // Debug: Print data before fitting the line
-    std::cout << "\nAttempting to fit a line to the data...\n";
+    while (continueProgram) {
+        // Display the menu
+        std::cout << "\nChoose an operation to perform:\n";
+        std::cout << "1. Read and print data from the file.\n";
+        std::cout << "2. Calculate magnitudes of the data.\n";
+        std::cout << "3. Fit a line to the data and calculate Chi-squared.\n";
+        std::cout << "4. Calculate x^y (x raised to y) for each data point.\n";
+        std::cout << "5. Exit the program.\n";
+        std::cout << "Enter your choice: ";
 
-    // Calling FitLineAndChiSquare function to fit a line and calculate Chi-squared
-    try {
-        chisquare(filePath);  // Calling the function
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;  // Output error message to standard error stream
+        int choice;
+        std::cin >> choice;
+
+        switch (choice) {
+        case 1: {
+            int N;
+            std::cout << "Enter the number of lines to print: ";
+            std::cin >> N;
+            RPData(inputFilePath, N);
+            break;
+        }
+        case 2:
+            magCal(inputFilePath);
+            break;
+        case 3: {
+            // Read error data
+            std::vector<double> errors = REdata(errorFilePath);
+            if (errors.empty()) {
+                std::cerr << "Error: Failed to read the error data from " << errorFilePath << "!\n";
+                break;
+            }
+            try {
+                chisquare(inputFilePath,errors);
+            } catch (const std::exception& e) {
+                std::cerr << "Error: " << e.what() << '\n';
+            }
+            break;
+        }
+        case 4:
+            XYcalculation(inputFilePath);
+            break;
+        case 5:
+            std::cout << "Exiting the program. Goodbye!\n";
+            continueProgram = false;
+            break;
+        default:
+            std::cerr << "Invalid choice. Please try again.\n";
+        }
+
+        if (continueProgram) {
+            // Ask if the user wants to perform another operation
+            char repeat;
+            std::cout << "\nDo you want to perform another operation? (y/n): ";
+            std::cin >> repeat;
+            if (repeat == 'n' || repeat == 'N') {
+                continueProgram = false;
+                std::cout << "Exiting the program. Goodbye!\n";
+            }
+        }
     }
-
-    // calling calculatexy function to calculate x power y 
-    XYcalculation(filePath);
 
     return 0;
 }
